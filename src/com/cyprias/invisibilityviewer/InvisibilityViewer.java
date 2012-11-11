@@ -1,11 +1,9 @@
 package com.cyprias.invisibilityviewer;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.server.MobEffectList;
 import net.minecraft.server.WatchableObject;
 
 import org.bukkit.command.CommandSender;
