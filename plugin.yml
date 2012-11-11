@@ -1,0 +1,18 @@
+name: InvisibilityViewer
+main: com.cyprias.invisibilityviewer.InvisibilityViewer
+version: 0.1.0
+depend: [ProtocolLib]
+
+permissions:
+    invisibilityviewer.*:
+        description: See all invisible entites. 
+        default: false
+        children:
+            invisibilityviewer.player: true
+            invisibilityviewer.other: true
+    invisibilityviewer.player:
+        description: See invisible players.
+        default: false
+    invisibilityviewer.other:
+        description: See other invisible entities.
+        default: false
