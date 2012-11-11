@@ -171,7 +171,10 @@ public class VersionChecker {
 		}
 
 		public versionInfo getVersionInfo(int index) {
-			return versions.get(index);
+			if (versions.size() >= (index+1))
+				return versions.get(index);
+			
+			return null;
 		}
 
 		public Object[] getArgs(){

@@ -29,14 +29,17 @@ public class InvisibilityViewer extends JavaPlugin {
 	String pluginName;
 
 	private Config config;
-
+	public Events events;
+	
 	public VersionChecker versionChecker;
 
 	public void onEnable() {
 		pluginName = getDescription().getName();
 
 		this.config = new Config(this);
-
+		this.events = new Events(this);
+		getServer().getPluginManager().registerEvents(this.events, this);
+		
 		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
 		if (Config.checkNewVersionOnStartup == true)
 			this.versionChecker.retreiveVersionInfo();

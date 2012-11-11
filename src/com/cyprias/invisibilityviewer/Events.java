@@ -16,9 +16,11 @@ public class Events implements Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onVersionCheckerEvent(VersionCheckerEvent event) {
-
 		if (event.getPluginName() == plugin.getName()) {
 			VersionChecker.versionInfo info = event.getVersionInfo(0);
+			if (info == null)
+				return;
+			
 			Object[] args = event.getArgs();
 
 			String curVersion = plugin.getDescription().getVersion();
