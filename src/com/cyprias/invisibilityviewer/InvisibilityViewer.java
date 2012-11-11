@@ -28,6 +28,30 @@ public class InvisibilityViewer extends JavaPlugin {
 	private String stPluginEnabled = "§f%s §7v§f%s §7is enabled.";
 	String pluginName;
 
+	private Config config;
+
+	public VersionChecker versionChecker;
+
+	public void onEnable() {
+		pluginName = getDescription().getName();
+
+		this.config = new Config(this);
+
+		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
+		if (Config.checkNewVersionOnStartup == true)
+			this.versionChecker.retreiveVersionInfo();
+
+		try {
+			Metrics metrics = new Metrics(this);
+			metrics.start();
+		} catch (IOException e) {
+		}
+
+		setupPacketHandler();
+
+		info(String.format(stPluginEnabled, pluginName, this.getDescription().getVersion()));
+	}
+
 	private Entity getEntity(List<Entity> ents, int eID) {
 		for (int i = 0; i < ents.size(); i++) {
 			if (ents.get(i).getEntityId() == eID)
@@ -36,24 +60,9 @@ public class InvisibilityViewer extends JavaPlugin {
 
 		return null;
 	}
-	public VersionChecker versionChecker;
-	public void onEnable() {
-		pluginName = getDescription().getName();
 
-		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
-		try {
-			Metrics metrics = new Metrics(this);
-			metrics.start();
-		} catch (IOException e) {
-		}
-		
-		setupPacketHandler();
+	private void setupPacketHandler() {
 
-		 info(String.format(stPluginEnabled, pluginName,this.getDescription().getVersion()));
-	}
-
-	private void setupPacketHandler(){
-		
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		protocolManager.addPacketListener(new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, 0x28) {
 			public void onPacketSending(PacketEvent event) {
@@ -90,14 +99,14 @@ public class InvisibilityViewer extends JavaPlugin {
 
 											if (changedData != null) {
 												if (entity instanceof Player) {
-													
-													if (hasPermission(player, "invisibilityviewer.player")){
+
+													if (hasPermission(player, "invisibilityviewer.player")) {
 														list.set(a, changedData);
 														mods.write(i, list);
 													}
-													
-												}else {
-													if (hasPermission(player, "invisibilityviewer.other")){
+
+												} else {
+													if (hasPermission(player, "invisibilityviewer.other")) {
 														list.set(a, changedData);
 														mods.write(i, list);
 													}
@@ -118,9 +127,9 @@ public class InvisibilityViewer extends JavaPlugin {
 				}
 			}
 		});
-		
+
 	}
-	
+
 	public WatchableObject removeInvisibility(WatchableObject data) {
 		switch (data.a()) {
 		case 0:// Flags
