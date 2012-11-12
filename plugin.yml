@@ -1,18 +1,51 @@
 name: InvisibilityViewer
 main: com.cyprias.invisibilityviewer.InvisibilityViewer
-version: 0.1.0
+version: 0.2.0
 depend: [ProtocolLib]
 
+commands:
+  iv:
+    description: Invisibility Viewer
+    usage: /<command>
+
 permissions:
-    invisibilityviewer.*:
-        description: See all invisible entites. 
-        default: false
-        children:
-            invisibilityviewer.player: true
-            invisibilityviewer.other: true
-    invisibilityviewer.player:
-        description: See invisible players.
-        default: false
-    invisibilityviewer.other:
-        description: See other invisible entities.
-        default: false
+  invisibilityviewer.*:
+    description: See all invisible entites. 
+    default: false
+    children:
+      invisibilityviewer.canView.*: true
+      invisibilityviewer.commands.*: true
+  invisibilityviewer.canView.*:
+    description: Can view the following types.
+    default: false
+    children:
+      invisibilityviewer.canView.player: true
+      invisibilityviewer.canView.other: true
+  invisibilityviewer.canView.player:
+    description: See invisible players.
+    default: false
+  invisibilityviewer.canView.other:
+    description: See other invisible entities.
+    default: false
+  invisibilityviewer.commands.*:
+    description: Use the following commands
+    default: false
+    children:
+      invisibilityviewer.commands.toggle: true
+      invisibilityviewer.commands.toggle.*: true
+      invisibilityviewer.commands.reload: true
+  invisibilityviewer.commands.toggle.*:
+    description: Use the following commands
+    default: false
+    children:
+      invisibilityviewer.commands.toggle.player: true
+      invisibilityviewer.commands.toggle.other: true
+  invisibilityviewer.commands.toggle.player:
+    description: Toggle seeing invisible players. 
+    default: false
+  invisibilityviewer.commands.toggle.other:
+    description: Toggle seeing invisible others.
+    default: false
+  invisibilityviewer.commands.reload:
+    description: Reload the config.
+    default: false

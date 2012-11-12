@@ -1,1 +1,4 @@
 checkNewVersionOnStartup: true
+viewByDefault:
+  player: false
+  other: false

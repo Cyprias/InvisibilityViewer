@@ -1,8 +1,11 @@
 package com.cyprias.invisibilityviewer;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+
 import com.cyprias.invisibilityviewer.VersionChecker.VersionCheckerEvent;
 
 public class Events implements Listener {
@@ -12,29 +15,22 @@ public class Events implements Listener {
 		this.plugin = plugin;
 	}
 
-	
-
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onVersionCheckerEvent(VersionCheckerEvent event) {
 		if (event.getPluginName() == plugin.getName()) {
 			VersionChecker.versionInfo info = event.getVersionInfo(0);
-			if (info == null)
-				return;
-			
-			Object[] args = event.getArgs();
-
 			String curVersion = plugin.getDescription().getVersion();
-
-			if (args.length == 0) {
-
-				int compare = plugin.versionChecker.compareVersions(curVersion, info.getTitle());
-				if (compare < 0) {
-					plugin.info("We're running v" + curVersion + ", v" + info.getTitle() + " is available");
-					plugin.info(info.getLink());
-				}
-
-				return;
+			int compare = plugin.versionChecker.compareVersions(curVersion, info.getTitle());
+			if (compare < 0) {
+				plugin.info("We're running v" + curVersion + ", v" + info.getTitle() + " is available");
+				plugin.info(info.getLink());
 			}
 		}
+	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onPlayerJoinEvent(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+		plugin.addPlayerInvisOps(player);
 	}
 }

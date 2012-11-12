@@ -8,7 +8,7 @@ public class Config {
 	private static Configuration config;
 	
 
-	static Boolean checkNewVersionOnStartup;
+	static Boolean checkNewVersionOnStartup, viewPlayerByDefault, viewOtherByDefault;
 
 
 	public Config(InvisibilityViewer plugin) {
@@ -17,6 +17,17 @@ public class Config {
 		config.options().copyDefaults(true);
 		plugin.saveConfig();
 
+		loadConfigOpts();
+	}
+	
+	public void reloadOurConfig(){
+		plugin.reloadConfig();
+		config = plugin.getConfig().getRoot();
+		loadConfigOpts();
+	}
+	private void loadConfigOpts(){
 		checkNewVersionOnStartup = config.getBoolean("checkNewVersionOnStartup");
+		viewPlayerByDefault = config.getBoolean("viewByDefault.player");
+		viewOtherByDefault = config.getBoolean("viewByDefault.other");
 	}
 }

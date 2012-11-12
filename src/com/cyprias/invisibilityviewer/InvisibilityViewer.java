@@ -2,10 +2,12 @@ package com.cyprias.invisibilityviewer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import net.minecraft.server.WatchableObject;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -28,17 +30,26 @@ public class InvisibilityViewer extends JavaPlugin {
 	private String stPluginEnabled = "§f%s §7v§f%s §7is enabled.";
 	String pluginName;
 
-	private Config config;
+	public Config config;
 	public Events events;
 	
 	public VersionChecker versionChecker;
-
+	public Commands commands;
+	
+	public void onLoad() {
+		info("onLoad");
+	}
+	
 	public void onEnable() {
 		pluginName = getDescription().getName();
 
 		this.config = new Config(this);
 		this.events = new Events(this);
 		getServer().getPluginManager().registerEvents(this.events, this);
+		
+		this.commands = new Commands(this);
+		getCommand("iv").setExecutor(this.commands);
+		
 		
 		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
 		if (Config.checkNewVersionOnStartup == true)
@@ -51,10 +62,14 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 
 		setupPacketHandler();
-
+		fillViewInvis();
+		
 		info(String.format(stPluginEnabled, pluginName, this.getDescription().getVersion()));
 	}
 
+	public static HashMap<String, Integer> viewInvis = new HashMap<String, Integer>();
+
+	
 	private Entity getEntity(List<Entity> ents, int eID) {
 		for (int i = 0; i < ents.size(); i++) {
 			if (ents.get(i).getEntityId() == eID)
@@ -102,14 +117,16 @@ public class InvisibilityViewer extends JavaPlugin {
 
 											if (changedData != null) {
 												if (entity instanceof Player) {
-
-													if (hasPermission(player, "invisibilityviewer.player")) {
+													
+													
+													
+													if (hasPermission(player, "invisibilityviewer.canView.player") && hasMask(viewInvis.get(player.getName()), maskPlayer)) {
 														list.set(a, changedData);
 														mods.write(i, list);
 													}
 
 												} else {
-													if (hasPermission(player, "invisibilityviewer.other")) {
+													if (hasPermission(player, "invisibilityviewer.canView.other") && hasMask(viewInvis.get(player.getName()), maskOther)) {
 														list.set(a, changedData);
 														mods.write(i, list);
 													}
@@ -133,18 +150,40 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	}
 
+	public void fillViewInvis(){
+		for (Player p : getServer().getOnlinePlayers()) {
+			addPlayerInvisOps(p);
+		}
+	}
+	
+	public void addPlayerInvisOps(Player player){
+
+		int flags = 0;
+		if (Config.viewPlayerByDefault == true)
+			flags = addMask(flags, maskPlayer);
+
+		if (Config.viewOtherByDefault == true)
+			flags = addMask(flags, maskOther);
+
+		viewInvis.put(player.getName(), flags);
+	}
+	
+    public ChatColor colouredHasMask(int flags, int mask){
+    	if (hasMask(flags, mask)){
+    		return ChatColor.GREEN;
+    	}
+    	return ChatColor.RED;
+    }
+    
+	
 	public WatchableObject removeInvisibility(WatchableObject data) {
 		switch (data.a()) {
 		case 0:// Flags
 			try {
 				Byte b = (Byte) data.b();
-
-				if (b == 32) {
+				if (b == 32) 
 					return new WatchableObject(data.c(), data.a(), (byte) 0);
-				}
-
-			} catch (NumberFormatException e) {
-			}
+			} catch (NumberFormatException e) {e.printStackTrace();}
 			break;
 		}
 		return null;
@@ -178,5 +217,38 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 
 		return player.hasPermission(node);
+	}
+	
+	public static int maskPlayer=(int) Math.pow(2, 0);
+	public static int maskOther=(int) Math.pow(2, 1);
+
+	
+    public static boolean hasMask(int flags, int mask) {
+        return ((flags & mask) == mask);
+    }
+	
+    public static int addMask(int flags, int mask){
+    	return (flags |= mask);
+    }
+    public static int delMask(int flags, int mask){
+    	return (flags &= ~mask);
+    }
+    
+	public void sendMessage(CommandSender sender, String message, Boolean showConsole, Boolean sendPrefix) {
+		if (sender instanceof Player && showConsole == true) {
+			info("§e" + sender.getName() + "->§f" + message);
+		}
+		if (sendPrefix == true) {
+			sender.sendMessage(chatPrefix + message);
+		} else {
+			sender.sendMessage(message);
+		}
+	}
+	public void sendMessage(CommandSender sender, String message, Boolean showConsole) {
+		sendMessage(sender, message, showConsole, true);
+	}
+
+	public void sendMessage(CommandSender sender, String message) {
+		sendMessage(sender, message, true);
 	}
 }
