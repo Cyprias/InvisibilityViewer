@@ -13,14 +13,14 @@ public class Commands implements CommandExecutor {
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-		final String message = getFinalArg(args, 0);
-		plugin.info(sender.getName() + ": /" + cmd.getName() + " " + message);
+		//final String message = getFinalArg(args, 0);
+		//plugin.info(sender.getName() + ": /" + cmd.getName() + " " + message);
 		
 		if (args.length == 0) {
 			plugin.sendMessage(sender, plugin.pluginName + " v" + plugin.getDescription().getVersion());
 
 			if (plugin.hasPermission(sender, "invisibilityviewer.commands.toggle"))
-				plugin.sendMessage(sender, "§a/" + commandLabel + " toggle [type] §7- Toggle toggle setting.", true, false);
+				plugin.sendMessage(sender, "§a/" + commandLabel + " toggle [type] §7- Toggle view setting.", true, false);
 			
 			if (plugin.hasPermission(sender, "invisibilityviewer.commands.reload"))
 				plugin.sendMessage(sender, "§a/" + commandLabel + " reload §7- Reload plugin.", true, false);
@@ -63,7 +63,6 @@ public class Commands implements CommandExecutor {
 			}
 			
 			String givenType = args[1];
-			plugin.info("givenType: " + givenType);
 			
 			int flags = plugin.viewInvis.get(sender.getName());
 			if (givenType.equalsIgnoreCase("player")){

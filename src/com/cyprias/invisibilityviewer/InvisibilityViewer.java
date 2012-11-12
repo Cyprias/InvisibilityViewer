@@ -181,16 +181,16 @@ public class InvisibilityViewer extends JavaPlugin {
 				if (e instanceof Player) {
 					
 					if (hasPermission(player, "invisibilityviewer.canView.player") && hasMask(pFlags, maskPlayer)) { // 
-						sendPacket(player, e.getEntityId(), false);
+						sendInvisPacket(player, e.getEntityId(), false);
 					}else{
-						sendPacket(player, e.getEntityId(), true);
+						sendInvisPacket(player, e.getEntityId(), true);
 					}
 					
 				}else{
 					if (hasPermission(player, "invisibilityviewer.canView.other")&& hasMask(pFlags, maskOther)) { // 
-						sendPacket(player, e.getEntityId(), false);
+						sendInvisPacket(player, e.getEntityId(), false);
 					}else{
-						sendPacket(player, e.getEntityId(), true);
+						sendInvisPacket(player, e.getEntityId(), true);
 					}
 					
 				}
@@ -224,13 +224,13 @@ public class InvisibilityViewer extends JavaPlugin {
 	}
 	
 	
-	public void sendPacket(Player player, int entID, Boolean invisible){
+	public void sendInvisPacket(Player player, int entID, Boolean invisible){
 		PacketContainer invisPacket = protocolManager.createPacket(Packets.Server.ENTITY_METADATA);
 
 		ArrayList<WatchableObject> list = new ArrayList<WatchableObject>();
 		if (invisible == true){
 			list.add(new WatchableObject(0, 0, (byte) 32));
-			info("Sending invis packet on " + entID);
+			//info("Sending invis packet on " + entID);
 		}else{
 			list.add(new WatchableObject(0, 0, (byte) 0));
 		}
