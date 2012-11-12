@@ -8,7 +8,7 @@ public class Config {
 	private static Configuration config;
 	
 
-	static Boolean checkNewVersionOnStartup, viewPlayerByDefault, viewOtherByDefault, colouredConsoleMessages;
+	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, colouredConsoleMessages;
 
 
 	public Config(InvisibilityViewer plugin) {
@@ -26,8 +26,8 @@ public class Config {
 	}
 	private void loadConfigOpts(){
 		checkNewVersionOnStartup = config.getBoolean("checkNewVersionOnStartup");
-		viewPlayerByDefault = config.getBoolean("viewByDefault.player");
-		viewOtherByDefault = config.getBoolean("viewByDefault.other");
+		togglePlayerByDefault = config.getBoolean("toggledByDefault.player");
+		toggleOtherByDefault = config.getBoolean("toggledByDefault.other");
 		colouredConsoleMessages = config.getBoolean("colouredConsoleMessages");
 	}
 }

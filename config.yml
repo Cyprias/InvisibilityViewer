@@ -1,5 +1,5 @@
 checkNewVersionOnStartup: true
-viewByDefault:
-  player: false
-  other: false
+toggledByDefault:
+  player: true
+  other: true
 colouredConsoleMessages: true

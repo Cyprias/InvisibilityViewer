@@ -272,10 +272,10 @@ public class InvisibilityViewer extends JavaPlugin {
 	public void addPlayerInvisOps(Player player){
 
 		int flags = 0;
-		if (Config.viewPlayerByDefault == true)
+		if (Config.togglePlayerByDefault == true)
 			flags = addMask(flags, maskPlayer);
 
-		if (Config.viewOtherByDefault == true)
+		if (Config.toggleOtherByDefault == true)
 			flags = addMask(flags, maskOther);
 
 		viewInvis.put(player.getName(), flags);
