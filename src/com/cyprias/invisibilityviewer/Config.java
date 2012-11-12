@@ -8,16 +8,15 @@ public class Config {
 	private static Configuration config;
 	
 
-	static Boolean checkNewVersionOnStartup, viewPlayerByDefault, viewOtherByDefault;
+	static Boolean checkNewVersionOnStartup, viewPlayerByDefault, viewOtherByDefault, colouredConsoleMessages;
 
 
 	public Config(InvisibilityViewer plugin) {
 		this.plugin = plugin;
+		
 		config = plugin.getConfig().getRoot();
 		config.options().copyDefaults(true);
 		plugin.saveConfig();
-
-		loadConfigOpts();
 	}
 	
 	public void reloadOurConfig(){
@@ -29,5 +28,6 @@ public class Config {
 		checkNewVersionOnStartup = config.getBoolean("checkNewVersionOnStartup");
 		viewPlayerByDefault = config.getBoolean("viewByDefault.player");
 		viewOtherByDefault = config.getBoolean("viewByDefault.other");
+		colouredConsoleMessages = config.getBoolean("colouredConsoleMessages");
 	}
 }

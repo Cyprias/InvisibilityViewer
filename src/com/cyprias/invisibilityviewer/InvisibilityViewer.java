@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import net.minecraft.server.WatchableObject;
 
@@ -37,36 +38,42 @@ public class InvisibilityViewer extends JavaPlugin {
 	public Commands commands;
 	
 	public void onLoad() {
-		info("onLoad");
-	}
-	
-	public void onEnable() {
 		pluginName = getDescription().getName();
-
 		this.config = new Config(this);
 		this.events = new Events(this);
-		getServer().getPluginManager().registerEvents(this.events, this);
-		
 		this.commands = new Commands(this);
-		getCommand("iv").setExecutor(this.commands);
-		
-		
 		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
-		if (Config.checkNewVersionOnStartup == true)
-			this.versionChecker.retreiveVersionInfo();
-
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
-		} catch (IOException e) {
-		}
+		} catch (IOException e) {}
+	}
+	
+	public void onEnable() {
+		this.config.reloadOurConfig();
+		
+		getServer().getPluginManager().registerEvents(this.events, this);
+		getCommand("iv").setExecutor(this.commands);
+
+		if (Config.checkNewVersionOnStartup == true)
+			this.versionChecker.retreiveVersionInfo();
 
 		setupPacketHandler();
 		fillViewInvis();
 		
 		info(String.format(stPluginEnabled, pluginName, this.getDescription().getVersion()));
+		
+		
 	}
 
+	public void onDisable(){
+		protocolManager = ProtocolLibrary.getProtocolManager();
+		protocolManager.removePacketListeners(this);
+		viewInvis.clear();
+		info (pluginName + " disabled.");
+	}
+	
+	
 	public static HashMap<String, Integer> viewInvis = new HashMap<String, Integer>();
 
 	
@@ -81,6 +88,7 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	private void setupPacketHandler() {
 
+		
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		protocolManager.addPacketListener(new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, 0x28) {
 			public void onPacketSending(PacketEvent event) {
@@ -189,8 +197,13 @@ public class InvisibilityViewer extends JavaPlugin {
 		return null;
 	}
 
+	private Logger log = Logger.getLogger("Minecraft");
 	public void info(String msg) {
-		getServer().getConsoleSender().sendMessage(chatPrefix + msg);
+		if (Config.colouredConsoleMessages == true){
+			getServer().getConsoleSender().sendMessage(chatPrefix + msg);
+		}else{
+			log.info(ChatColor.stripColor(chatPrefix + msg));
+		}
 	}
 
 	public boolean hasPermission(CommandSender sender, String node) {

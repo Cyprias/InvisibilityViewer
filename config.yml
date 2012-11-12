@@ -2,3 +2,4 @@ checkNewVersionOnStartup: true
 viewByDefault:
   player: false
   other: false
+colouredConsoleMessages: true

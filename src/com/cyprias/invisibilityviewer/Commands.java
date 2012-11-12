@@ -23,7 +23,7 @@ public class Commands implements CommandExecutor {
 				plugin.sendMessage(sender, "§a/" + commandLabel + " toggle [type] §7- Toggle toggle setting.", true, false);
 			
 			if (plugin.hasPermission(sender, "invisibilityviewer.commands.reload"))
-				plugin.sendMessage(sender, "§a/" + commandLabel + " reload §7- Reload config", true, false);
+				plugin.sendMessage(sender, "§a/" + commandLabel + " reload §7- Reload plugin.", true, false);
 			
 			return true;
 		}
@@ -33,8 +33,11 @@ public class Commands implements CommandExecutor {
 			if (!hasCommandPermission(sender, "invisibilityviewer.commands.reload")) {
 				return true;
 			}
-			plugin.config.reloadOurConfig();
-			plugin.sendMessage(sender, "Config reloaded.");
+			//plugin.config.reloadOurConfig();
+			plugin.getPluginLoader().disablePlugin(plugin);
+			plugin.getPluginLoader().enablePlugin(plugin);
+			
+			plugin.sendMessage(sender, "Plugin reloaded.");
 			return true;
 		}else if (args[0].equalsIgnoreCase("toggle")) {
 			if (!hasCommandPermission(sender, "invisibilityviewer.commands.toggle")) {
@@ -44,6 +47,7 @@ public class Commands implements CommandExecutor {
 				sender.sendMessage("You must be a player to execute toggle.");
 				return true;
 			}
+			
 			
 			
 			if (args.length < 2) {
