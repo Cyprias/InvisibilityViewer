@@ -1,18 +1,25 @@
 package com.cyprias.invisibilityviewer;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import net.minecraft.server.MobEffectList;
 import net.minecraft.server.WatchableObject;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+
 import com.comphenix.protocol.Packets;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -37,6 +44,7 @@ public class InvisibilityViewer extends JavaPlugin {
 	public VersionChecker versionChecker;
 	public Commands commands;
 	
+	MobEffectList invisEffect;
 	public void onLoad() {
 		pluginName = getDescription().getName();
 		this.config = new Config(this);
@@ -47,6 +55,8 @@ public class InvisibilityViewer extends JavaPlugin {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
 		} catch (IOException e) {}
+		
+		invisEffect = net.minecraft.server.MobEffectList.INVISIBILITY;
 	}
 	
 	public void onEnable() {
@@ -90,7 +100,7 @@ public class InvisibilityViewer extends JavaPlugin {
 
 		
 		protocolManager = ProtocolLibrary.getProtocolManager();
-		protocolManager.addPacketListener(new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, 0x28) {
+		protocolManager.addPacketListener(new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, Packets.Server.ENTITY_METADATA) {
 			public void onPacketSending(PacketEvent event) {
 				// Item packets
 				PacketContainer packet = event.getPacket();
@@ -158,6 +168,101 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	}
 
+	public void sendSurroundingInvisPackets(Player player){
+		int radius = getServer().getViewDistance() * 16;
+		List<Entity> ents = player.getNearbyEntities(radius, radius, radius);
+		String pName = player.getName();
+		Integer pFlags = viewInvis.get(pName);
+
+		for (Entity e : ents) {
+			
+			if (isInvisible(e)){
+				
+				if (e instanceof Player) {
+					
+					if (hasPermission(player, "invisibilityviewer.canView.player") && hasMask(pFlags, maskPlayer)) { // 
+						sendPacket(player, e.getEntityId(), false);
+					}else{
+						sendPacket(player, e.getEntityId(), true);
+					}
+					
+				}else{
+					if (hasPermission(player, "invisibilityviewer.canView.other")&& hasMask(pFlags, maskOther)) { // 
+						sendPacket(player, e.getEntityId(), false);
+					}else{
+						sendPacket(player, e.getEntityId(), true);
+					}
+					
+				}
+				
+			}
+
+		}
+	}
+	
+	
+	public Boolean isInvisible(Entity entity){
+		if (entity instanceof CraftLivingEntity) {
+			
+			CraftLivingEntity cEnt = (CraftLivingEntity) entity;
+			if(cEnt != null) {
+				Collection<PotionEffect> collection = cEnt.getActivePotionEffects();
+				if (collection != null && !collection.isEmpty()) {
+					Iterator<PotionEffect> iterator = collection.iterator();
+					while (iterator.hasNext()) {
+						PotionEffect effect = (PotionEffect) iterator.next();
+						if (effect.getType().getId() == invisEffect.getId()) {
+							return true;
+						}
+					}
+				}
+			}
+			
+		}
+
+		return false;
+	}
+	
+	
+	public void sendPacket(Player player, int entID, Boolean invisible){
+		PacketContainer invisPacket = protocolManager.createPacket(Packets.Server.ENTITY_METADATA);
+
+		ArrayList<WatchableObject> list = new ArrayList<WatchableObject>();
+		if (invisible == true){
+			list.add(new WatchableObject(0, 0, (byte) 32));
+			info("Sending invis packet on " + entID);
+		}else{
+			list.add(new WatchableObject(0, 0, (byte) 0));
+		}
+
+		try {
+			
+			invisPacket.getModifier().write(0, entID);
+			invisPacket.getModifier().write(1, list);
+			protocolManager.sendServerPacket(player, invisPacket);
+		} catch (FieldAccessException e) {e.printStackTrace();
+		} catch (InvocationTargetException e) {e.printStackTrace();}
+		
+	}
+	
+	
+	
+	
+	public WatchableObject removeInvisibility(WatchableObject data) {
+		switch (data.a()) {
+		case 0:// Flags
+			try {
+				Byte b = (Byte) data.b();
+				if (b == 32) {
+					return new WatchableObject(data.c(), data.a(), (byte) 0);
+				}
+			} catch (NumberFormatException e) {e.printStackTrace();}
+			break;
+		}
+		return null;
+	}
+
+	
 	public void fillViewInvis(){
 		for (Player p : getServer().getOnlinePlayers()) {
 			addPlayerInvisOps(p);
@@ -183,19 +288,6 @@ public class InvisibilityViewer extends JavaPlugin {
     	return ChatColor.RED;
     }
     
-	
-	public WatchableObject removeInvisibility(WatchableObject data) {
-		switch (data.a()) {
-		case 0:// Flags
-			try {
-				Byte b = (Byte) data.b();
-				if (b == 32) 
-					return new WatchableObject(data.c(), data.a(), (byte) 0);
-			} catch (NumberFormatException e) {e.printStackTrace();}
-			break;
-		}
-		return null;
-	}
 
 	private Logger log = Logger.getLogger("Minecraft");
 	public void info(String msg) {

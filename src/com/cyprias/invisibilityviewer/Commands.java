@@ -75,6 +75,7 @@ public class Commands implements CommandExecutor {
 					plugin.viewInvis.put(sender.getName(), flags);
 				}
 				plugin.sendMessage(sender, "View " + givenType + " = " + plugin.hasMask(flags, plugin.maskPlayer));
+				plugin.sendSurroundingInvisPackets((Player) sender);
 				return true;
 				
 			}else if (givenType.equalsIgnoreCase("other")){
@@ -86,6 +87,7 @@ public class Commands implements CommandExecutor {
 					plugin.viewInvis.put(sender.getName(), flags);
 				}
 				plugin.sendMessage(sender, "View " + givenType + " = " + plugin.hasMask(flags, plugin.maskOther));
+				plugin.sendSurroundingInvisPackets((Player) sender);
 				return true;
 				
 			}else{
@@ -94,7 +96,14 @@ public class Commands implements CommandExecutor {
 			}
 			
 			
+		}else if (args[0].equalsIgnoreCase("test1")) {
 			
+		//	plugin.sendAllPackets((Player) sender, true);
+			return true;
+		}else if (args[0].equalsIgnoreCase("test2")) {
+			
+		//	plugin.sendAllPackets((Player) sender, false);
+			return true;
 		}
 		
 		
