@@ -83,9 +83,9 @@ public class InvisibilityViewer extends JavaPlugin {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		protocolManager.removePacketListeners(this);
 		viewInvis.clear();
-		
+
 		getServer().getScheduler().cancelTasks(this);
-		
+
 		info(pluginName + " disabled.");
 	}
 
@@ -116,25 +116,27 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	private Boolean distanceView(Player player, Entity entity) {
 		double dist = player.getLocation().distance(entity.getLocation());
-		if (entity instanceof Player) {
-			if (hasPermission(player, "invisibilityviewer.distanceView.player") && dist <= Config.distanceRadius) {
-				return true;
-			}
+		if (dist <= Config.distanceRadius) {
+			if (entity instanceof Player) {
+				if (hasPermission(player, "invisibilityviewer.distanceView.player")) {
+					return true;
+				}
 
-		} else {
-			if (hasPermission(player, "invisibilityviewer.distanceView.other") && dist <= Config.distanceRadius) {
-				return true;
+			} else {
+				if (hasPermission(player, "invisibilityviewer.distanceView.other")) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
-	
+
 	private PacketAdapter pAdapter;
-	
-	private void removePacketListener(){
+
+	private void removePacketListener() {
 		protocolManager.removePacketListener(pAdapter);
 	}
-	
+
 	private void addPacketListener() {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		pAdapter = new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, Packets.Server.ENTITY_METADATA) {
@@ -169,29 +171,29 @@ public class InvisibilityViewer extends JavaPlugin {
 
 										if (list.get(a) instanceof WatchableObject) {
 
-											//Boolean invisPacket = isInvisPacket((WatchableObject) list.get(a));
+											// Boolean invisPacket =
+											// isInvisPacket((WatchableObject)
+											// list.get(a));
 											Byte entFlag = getPacketFlag((WatchableObject) list.get(a));
-											
-											
+
 											if (entFlag == null)
 												continue;
 
 											if (entFlag == 32) {
 
-												// invisEntities.put(entity,
-												// true);
-												
-												
+												//info("invis 32 " + list.get(a).c() + " " + list.get(a).a());
+
 												if (Config.distanceEnabled == true) {
-	
-													if (!distanceTaskIDs.containsKey(entity)){
-													
+
+													if (!distanceTaskIDs.containsKey(entity)) {
+
 														invisDistanceTask task = new invisDistanceTask(entity);
-														int taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
+														int taskID = plugin.getServer().getScheduler()
+															.scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
 														task.setId(taskID);
-														
-														//info("starting dist task " + eID);
-														
+
+													// info("starting dist task " + eID);
+
 														distanceTaskIDs.put(entity, taskID);
 													}
 												}
@@ -201,17 +203,25 @@ public class InvisibilityViewer extends JavaPlugin {
 													mods.write(i, list);
 												}
 
-											} else if (entFlag == 0) {
-												if (Config.distanceEnabled == true) {
-													if (distanceTaskIDs.containsKey(entity)) {
-														//info("invis over " + eID + ", " + packet.getID());
-														int taskID = distanceTaskIDs.get(entity);
-														plugin.getServer().getScheduler().cancelTask(taskID);
+											} else if (distanceTaskIDs.containsKey(entity)) {
+
+												if (entFlag == 0) {
+												//	info("invis 0 " + list.get(a).c() + " " + list.get(a).a());
+
+													if (Config.distanceEnabled == true) {
+														if (distanceTaskIDs.containsKey(entity)) {
+														//	info("invis over " + eID + ", " + packet.getID());
+															int taskID = distanceTaskIDs.get(entity);
+															plugin.getServer().getScheduler().cancelTask(taskID);
+															distanceTaskIDs.remove(entity);
+														}
 													}
+
+												//} else {
+												//	info("invis other #" + entFlag + " " + list.get(a).c() + " " + list.get(a).a());
 												}
 
 											}
-
 										}
 
 									}
@@ -231,17 +241,17 @@ public class InvisibilityViewer extends JavaPlugin {
 		protocolManager.addPacketListener(pAdapter);
 	}
 
-
 	public static HashMap<String, Boolean> lastInvisSent = new HashMap<String, Boolean>();
+
 	public void sendInvisPacket(Player player, int entID, Boolean visible) {
 		String uid = player.getName() + entID;
-		if (lastInvisSent.containsKey(uid)){
+		if (lastInvisSent.containsKey(uid)) {
 			if (lastInvisSent.get(uid).equals(visible))
 				return;
-			
+
 		}
 		lastInvisSent.put(uid, visible);
-		
+
 		PacketContainer invisPacket = protocolManager.createPacket(Packets.Server.ENTITY_METADATA);
 
 		ArrayList<WatchableObject> list = new ArrayList<WatchableObject>();
@@ -257,11 +267,10 @@ public class InvisibilityViewer extends JavaPlugin {
 			invisPacket.getModifier().write(0, entID);
 			invisPacket.getModifier().write(1, list);
 
-			
 			removePacketListener();
 			protocolManager.sendServerPacket(player, invisPacket);
 			addPacketListener();
-			
+
 		} catch (FieldAccessException e) {
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
@@ -269,7 +278,7 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 
 	}
-	
+
 	private Byte getPacketFlag(WatchableObject data) {
 		switch (data.a()) {
 		case 0:// Flags
@@ -285,6 +294,8 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	public static HashMap<Entity, Integer> distanceTaskIDs = new HashMap<Entity, Integer>();
 
+	int lastNum = 0;
+
 	public class invisDistanceTask implements Runnable {
 		private Entity entity;
 
@@ -293,35 +304,46 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 
 		private int taskID;
-		public void setId(int Id){
+
+		public void setId(int Id) {
 			taskID = Id;
 		}
-		
+
 		@Override
 		public void run() {
-			if (entity.isValid() == false){
+			if (entity.isValid() == false) {
 				getServer().getScheduler().cancelTask(taskID);
 				return;
 			}
-			
-			
+
 			int radius = getServer().getViewDistance() * 16;
 			List<Entity> ents = entity.getNearbyEntities(radius, radius, radius);
 
 			double dist;
 			for (Entity e : ents) {
 				if (e instanceof Player) {
-					dist = e.getLocation().distance(entity.getLocation());
+					// dist = e.getLocation().distance(entity.getLocation());
 
-					
-					
-					if (distanceView((Player) e, entity)){
-						sendInvisPacket((Player) e, entity.getEntityId(), true );
-					}else if (canView((Player) e, entity) == false){
-						sendInvisPacket((Player) e, entity.getEntityId(), false );
+					if (distanceView((Player) e, entity)) {
+						/*
+						 * if (lastNum != 1){ lastNum = 1;
+						 * info("invisDistanceTask: 1"); }
+						 */
+
+						sendInvisPacket((Player) e, entity.getEntityId(), true);
+
+					} else if (canView((Player) e, entity) == false) {
+						/*
+						 * if (lastNum != 2){ lastNum = 2;
+						 * info("invisDistanceTask: 2"); }
+						 */
+
+						sendInvisPacket((Player) e, entity.getEntityId(), false);
+						/*
+						 * }else{ if (lastNum != 3){ lastNum = 3;
+						 * info("invisDistanceTask: 3"); }
+						 */
 					}
-					
-
 
 				}
 			}
@@ -368,8 +390,6 @@ public class InvisibilityViewer extends JavaPlugin {
 
 		return false;
 	}
-
-
 
 	public void fillViewInvis() {
 		for (Player p : getServer().getOnlinePlayers()) {
