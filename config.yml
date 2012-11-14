@@ -6,4 +6,4 @@ colouredConsoleMessages: true
 distance:
   enabled: true
   radius: 5
-  frequentcy: 0.25
+  frequency: 0.25

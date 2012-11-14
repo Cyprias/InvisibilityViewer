@@ -187,7 +187,7 @@ public class InvisibilityViewer extends JavaPlugin {
 													if (!distanceTaskIDs.containsKey(entity)){
 													
 														invisDistanceTask task = new invisDistanceTask(entity);
-														int taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequentcy * 20L));
+														int taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
 														task.setId(taskID);
 														
 														//info("starting dist task " + eID);

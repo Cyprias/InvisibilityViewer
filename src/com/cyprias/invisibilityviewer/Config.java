@@ -10,7 +10,7 @@ public class Config {
 
 	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, colouredConsoleMessages, distanceEnabled;
 	static int distanceRadius;
-	static long distanceFrequentcy;
+	static long distanceFrequency;
 	
 	public Config(InvisibilityViewer plugin) {
 		this.plugin = plugin;
@@ -33,6 +33,6 @@ public class Config {
 		
 		distanceEnabled = config.getBoolean("distance.enabled");
 		distanceRadius = config.getInt("distance.radius");
-		distanceFrequentcy = config.getLong("distance.frequentcy");
+		distanceFrequency = config.getLong("distance.frequency");
 	}
 }
