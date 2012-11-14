@@ -15,6 +15,7 @@ permissions:
     children:
       invisibilityviewer.canView.*: true
       invisibilityviewer.commands.*: true
+      invisibilityviewer.distanceView.*: true
   invisibilityviewer.canView.*:
     description: Can view the following types.
     default: false
@@ -48,4 +49,16 @@ permissions:
     default: false
   invisibilityviewer.commands.reload:
     description: Reload the config.
+    default: false
+  invisibilityviewer.distanceView.*:
+    description: Access the following permissions.
+    default: false
+    children:
+      invisibilityviewer.distanceView.player: true
+      invisibilityviewer.distanceView.other: true
+  invisibilityviewer.distanceView.player:
+    description: See nearby invisible players.
+    default: false
+  invisibilityviewer.distanceView.other:
+    description: See nearby invisible non-players.
     default: false

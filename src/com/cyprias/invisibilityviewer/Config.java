@@ -8,9 +8,10 @@ public class Config {
 	private static Configuration config;
 	
 
-	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, colouredConsoleMessages;
-
-
+	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, colouredConsoleMessages, distanceEnabled;
+	static int distanceRadius;
+	static long distanceFrequentcy;
+	
 	public Config(InvisibilityViewer plugin) {
 		this.plugin = plugin;
 		
@@ -29,5 +30,9 @@ public class Config {
 		togglePlayerByDefault = config.getBoolean("toggledByDefault.player");
 		toggleOtherByDefault = config.getBoolean("toggledByDefault.other");
 		colouredConsoleMessages = config.getBoolean("colouredConsoleMessages");
+		
+		distanceEnabled = config.getBoolean("distance.enabled");
+		distanceRadius = config.getInt("distance.radius");
+		distanceFrequentcy = config.getLong("distance.frequentcy");
 	}
 }

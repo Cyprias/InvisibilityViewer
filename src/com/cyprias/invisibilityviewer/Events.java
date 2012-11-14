@@ -33,4 +33,5 @@ public class Events implements Listener {
 		Player player = event.getPlayer();
 		plugin.addPlayerInvisOps(player);
 	}
+
 }

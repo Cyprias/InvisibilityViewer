@@ -1,5 +1,9 @@
 checkNewVersionOnStartup: true
 toggledByDefault:
-  player: true
-  other: true
+  player: false
+  other: false
 colouredConsoleMessages: true
+distance:
+  enabled: true
+  radius: 5
+  frequentcy: 0.25
