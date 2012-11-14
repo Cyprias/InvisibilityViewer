@@ -299,10 +299,7 @@ public class InvisibilityViewer extends JavaPlugin {
 		
 		@Override
 		public void run() {
-		//	info("invisDistanceTask: " + entity.isValid());
-			
 			if (entity.isValid() == false){
-				info("ent nolonger valid, killing task.");
 				getServer().getScheduler().cancelTask(taskID);
 				return;
 			}
