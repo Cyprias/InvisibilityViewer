@@ -57,8 +57,7 @@ public class InvisibilityViewer extends JavaPlugin {
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
-		} catch (IOException e) {
-		}
+		} catch (IOException e) {}
 
 		invisEffect = net.minecraft.server.MobEffectList.INVISIBILITY;
 	}
@@ -198,7 +197,11 @@ public class InvisibilityViewer extends JavaPlugin {
 													}
 												}
 
-												if (canView(player, entity) == true) {
+												
+												if (distanceView(player, entity)) {
+													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), (byte) 0));
+													mods.write(i, list);
+												}else if (canView(player, entity) == true) {
 													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), (byte) 0));
 													mods.write(i, list);
 												}
