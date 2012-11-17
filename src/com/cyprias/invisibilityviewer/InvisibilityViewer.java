@@ -57,7 +57,8 @@ public class InvisibilityViewer extends JavaPlugin {
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+		}
 
 		invisEffect = net.minecraft.server.MobEffectList.INVISIBILITY;
 	}
@@ -140,10 +141,7 @@ public class InvisibilityViewer extends JavaPlugin {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		pAdapter = new PacketAdapter(this, ConnectionSide.SERVER_SIDE, ListenerPriority.NORMAL, Packets.Server.ENTITY_METADATA) {
 			public void onPacketSending(PacketEvent event) {
-				// Item packets
 				PacketContainer packet = event.getPacket();
-
-				Player player = event.getPlayer();
 
 				switch (event.getPacketID()) {
 				case Packets.Server.ENTITY_METADATA: // Entity Metadata
@@ -159,6 +157,7 @@ public class InvisibilityViewer extends JavaPlugin {
 						} catch (FieldAccessException e) {
 							e.printStackTrace();
 						}
+						Player player = event.getPlayer();
 						entity = getEntity(player.getWorld().getEntities(), eID);
 
 						for (int i = 1; i < mods.size(); i++) {
@@ -180,28 +179,23 @@ public class InvisibilityViewer extends JavaPlugin {
 
 											if (entFlag == 32) {
 
-												//info("invis 32 " + list.get(a).c() + " " + list.get(a).a());
+												// info("invis 32 " +
+												// list.get(a).c() + " " +
+												// list.get(a).a());
 
-												if (Config.distanceEnabled == true) {
+												if (Config.distanceEnabled == true && !distanceTaskIDs.containsKey(entity)) {
 
-													if (!distanceTaskIDs.containsKey(entity)) {
-
-														invisDistanceTask task = new invisDistanceTask(entity);
-														int taskID = plugin.getServer().getScheduler()
-															.scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
-														task.setId(taskID);
-
-													// info("starting dist task " + eID);
-
-														distanceTaskIDs.put(entity, taskID);
-													}
+													invisDistanceTask task = new invisDistanceTask(entity);
+													int taskID = plugin.getServer().getScheduler()
+														.scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
+													task.setId(taskID);
+													distanceTaskIDs.put(entity, taskID);
 												}
 
-												
 												if (distanceView(player, entity)) {
 													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), (byte) 0));
 													mods.write(i, list);
-												}else if (canView(player, entity) == true) {
+												} else if (canView(player, entity) == true) {
 													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), (byte) 0));
 													mods.write(i, list);
 												}
@@ -209,19 +203,19 @@ public class InvisibilityViewer extends JavaPlugin {
 											} else if (distanceTaskIDs.containsKey(entity)) {
 
 												if (entFlag == 0) {
-												//	info("invis 0 " + list.get(a).c() + " " + list.get(a).a());
+													plugin.getServer().getScheduler().cancelTask(distanceTaskIDs.get(entity));
+													distanceTaskIDs.remove(entity);
 
-													if (Config.distanceEnabled == true) {
-														if (distanceTaskIDs.containsKey(entity)) {
-														//	info("invis over " + eID + ", " + packet.getID());
-															int taskID = distanceTaskIDs.get(entity);
-															plugin.getServer().getScheduler().cancelTask(taskID);
-															distanceTaskIDs.remove(entity);
+												} else {
+													if (Config.debugMessages == true) {
+														if (entity instanceof Player) {
+															info("flag # " + entFlag + "on invis ent " + ((Player) entity).getName() + ", " + list.get(a).c() + ", "
+																+ list.get(a).a());
+														} else {
+															info("flag # " + entFlag + "on invis ent " + entity.getEntityId() + ", " + list.get(a).c() + ", "
+																+ list.get(a).a());
 														}
 													}
-
-												//} else {
-												//	info("invis other #" + entFlag + " " + list.get(a).c() + " " + list.get(a).a());
 												}
 
 											}

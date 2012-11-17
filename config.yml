@@ -7,3 +7,4 @@ distance:
   enabled: true
   radius: 5
   frequency: 1
+debugMessages: false
