@@ -160,7 +160,7 @@ public class InvisibilityViewer extends JavaPlugin {
 						Player player = event.getPlayer();
 						entity = getEntity(player.getWorld().getEntities(), eID);
 
-						for (int i = 1; i < mods.size(); i++) {
+						for (int i = 1; i < mods.size(); i++) {//0=entID
 							try {
 								if (mods.read(i) instanceof ArrayList) {
 									ArrayList<WatchableObject> list = (ArrayList<WatchableObject>) mods.read(i);
@@ -169,19 +169,12 @@ public class InvisibilityViewer extends JavaPlugin {
 
 										if (list.get(a) instanceof WatchableObject) {
 
-											// Boolean invisPacket =
-											// isInvisPacket((WatchableObject)
-											// list.get(a));
 											Byte entFlag = getPacketFlag((WatchableObject) list.get(a));
 
 											if (entFlag == null)
 												continue;
 
 											if (entFlag == 32) {
-
-												// info("invis 32 " +
-												// list.get(a).c() + " " +
-												// list.get(a).a());
 
 												if (Config.distanceEnabled == true && !distanceTaskIDs.containsKey(entity)) {
 
@@ -230,7 +223,7 @@ public class InvisibilityViewer extends JavaPlugin {
 						}
 					}
 
-					break;
+					break; //case
 				}
 			}
 		};
@@ -238,26 +231,21 @@ public class InvisibilityViewer extends JavaPlugin {
 		protocolManager.addPacketListener(pAdapter);
 	}
 
-	public static HashMap<String, Boolean> lastInvisSent = new HashMap<String, Boolean>();
+	public static HashMap<String, Byte> lastInvisSent = new HashMap<String, Byte>();
 
-	public void sendInvisPacket(Player player, int entID, Boolean visible) {
+	public void sendFlagPacket(Player player, int entID, Byte flag) {
 		String uid = player.getName() + entID;
 		if (lastInvisSent.containsKey(uid)) {
-			if (lastInvisSent.get(uid).equals(visible))
+			if (lastInvisSent.get(uid).equals(flag))
 				return;
 
 		}
-		lastInvisSent.put(uid, visible);
+		lastInvisSent.put(uid, flag);
 
 		PacketContainer invisPacket = protocolManager.createPacket(Packets.Server.ENTITY_METADATA);
 
 		ArrayList<WatchableObject> list = new ArrayList<WatchableObject>();
-		if (visible == true) {
-			list.add(new WatchableObject(0, 0, (byte) 0));
-		} else {
-			list.add(new WatchableObject(0, 0, (byte) 32));
-			// info("Sending invis packet on " + entID);
-		}
+		list.add(new WatchableObject(0, 0, flag));
 
 		try {
 
@@ -277,14 +265,12 @@ public class InvisibilityViewer extends JavaPlugin {
 	}
 
 	private Byte getPacketFlag(WatchableObject data) {
-		switch (data.a()) {
-		case 0:// Flags
+		if (data.a() == 0){
 			try {
 				return (Byte) data.b();
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 			}
-			break;
 		}
 		return null;
 	}
@@ -327,7 +313,7 @@ public class InvisibilityViewer extends JavaPlugin {
 						 * info("invisDistanceTask: 1"); }
 						 */
 
-						sendInvisPacket((Player) e, entity.getEntityId(), true);
+						sendFlagPacket((Player) e, entity.getEntityId(), (byte) 32);
 
 					} else if (canView((Player) e, entity) == false) {
 						/*
@@ -335,7 +321,7 @@ public class InvisibilityViewer extends JavaPlugin {
 						 * info("invisDistanceTask: 2"); }
 						 */
 
-						sendInvisPacket((Player) e, entity.getEntityId(), false);
+						sendFlagPacket((Player) e, entity.getEntityId(), (byte) 0);
 						/*
 						 * }else{ if (lastNum != 3){ lastNum = 3;
 						 * info("invisDistanceTask: 3"); }
@@ -357,9 +343,9 @@ public class InvisibilityViewer extends JavaPlugin {
 
 			if (isInvisible(e)) {
 				if (canView(player, e) == true) {
-					sendInvisPacket(player, e.getEntityId(), true);
+					sendFlagPacket(player, e.getEntityId(), (byte) 32);
 				} else {
-					sendInvisPacket(player, e.getEntityId(), false);
+					sendFlagPacket(player, e.getEntityId(), (byte) 0);
 				}
 			}
 

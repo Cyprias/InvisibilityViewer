@@ -6,5 +6,5 @@ colouredConsoleMessages: true
 distance:
   enabled: true
   radius: 5
-  frequency: 1
+  frequency: 0.25
 debugMessages: false
