@@ -178,9 +178,9 @@ public class InvisibilityViewer extends JavaPlugin {
 											if (entFlag == null)
 												continue;
 											
-											if (Config.debugMessages == true) {
+											if (Config.debugMessages == true) 
 												info(player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")"));
-											}
+											
 
 	
 											if (Config.debugNoIntercept == true)
@@ -189,21 +189,26 @@ public class InvisibilityViewer extends JavaPlugin {
 											
 											if (entFlag == hideByte) {
 
+												if (Config.distanceEnabled == true && !distanceTaskIDs.containsKey(entity)) {
+													invisDistanceTask task = new invisDistanceTask(entity);
+													int taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
+													task.setId(taskID);
+													distanceTaskIDs.put(entity, taskID);
+												}
+												
 												if (Config.distanceEnabled == true && distanceView(player, entity)) {
-													if (!distanceTaskIDs.containsKey(entity)) {
-
-														invisDistanceTask task = new invisDistanceTask(entity);
-														int taskID = plugin.getServer().getScheduler()
-															.scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
-														task.setId(taskID);
-														distanceTaskIDs.put(entity, taskID);
-													}
-													
 													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), viewByte));
 													mods.write(i, list);
+													if (Config.debugMessages == true) 
+														info("Switched " + player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")") + " to " + viewByte);
+													
+													
 												} else if (canView(player, entity) == true) {
 													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), viewByte));
 													mods.write(i, list);
+													if (Config.debugMessages == true) 
+														info("Switched " + player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")") + " to " + viewByte);
+													
 												}
 
 											} else if (distanceTaskIDs.containsKey(entity)) {
