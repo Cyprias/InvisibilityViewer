@@ -1,5 +1,7 @@
 package com.cyprias.invisibilityviewer;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,10 +21,10 @@ public class Commands implements CommandExecutor {
 		if (args.length == 0) {
 			plugin.sendMessage(sender, plugin.pluginName + " v" + plugin.getDescription().getVersion());
 
-			if (plugin.hasPermission(sender, "invisibilityviewer.commands.toggle"))
+			if (sender.hasPermission("invisibilityviewer.commands.toggle"))
 				plugin.sendMessage(sender, "§a/" + commandLabel + " toggle [type] §7- Toggle view setting.", true, false);
 			
-			if (plugin.hasPermission(sender, "invisibilityviewer.commands.reload"))
+			if (sender.hasPermission("invisibilityviewer.commands.reload"))
 				plugin.sendMessage(sender, "§a/" + commandLabel + " reload §7- Reload plugin.", true, false);
 			
 			return true;
@@ -53,10 +55,10 @@ public class Commands implements CommandExecutor {
 			if (args.length < 2) {
 				plugin.sendMessage(sender, "Available types: ");
 				
-				if (plugin.hasPermission(sender, "invisibilityviewer.commands.toggle.player"))
+				if (sender.hasPermission( "invisibilityviewer.commands.toggle.player"))
 					plugin.sendMessage(sender, "§a/" + commandLabel + " toggle " + plugin.colouredHasMask(plugin.viewInvis.get(sender.getName()), plugin.maskPlayer) + "player");
 				
-				if (plugin.hasPermission(sender, "invisibilityviewer.commands.toggle.others"))
+				if (sender.hasPermission( "invisibilityviewer.commands.toggle.others"))
 					plugin.sendMessage(sender, "§a/" + commandLabel + " toggle " + plugin.colouredHasMask(plugin.viewInvis.get(sender.getName()), plugin.maskOther) + "other");
 
 				return true;
@@ -74,7 +76,9 @@ public class Commands implements CommandExecutor {
 					plugin.viewInvis.put(sender.getName(), flags);
 				}
 				plugin.sendMessage(sender, "View " + givenType + " = " + plugin.hasMask(flags, plugin.maskPlayer));
-				plugin.sendSurroundingInvisPackets((Player) sender);
+				try {
+					plugin.sendSurroundingInvisPackets((Player) sender);
+				} catch (InvocationTargetException e) {e.printStackTrace();}
 				return true;
 				
 			}else if (givenType.equalsIgnoreCase("other")){
@@ -86,7 +90,9 @@ public class Commands implements CommandExecutor {
 					plugin.viewInvis.put(sender.getName(), flags);
 				}
 				plugin.sendMessage(sender, "View " + givenType + " = " + plugin.hasMask(flags, plugin.maskOther));
-				plugin.sendSurroundingInvisPackets((Player) sender);
+				try {
+					plugin.sendSurroundingInvisPackets((Player) sender);
+				} catch (InvocationTargetException e) {e.printStackTrace();}
 				return true;
 				
 			}else{
@@ -127,7 +133,7 @@ public class Commands implements CommandExecutor {
 		return bldr.toString();
 	}
 	public boolean hasCommandPermission(CommandSender player, String permission) {
-		if (plugin.hasPermission(player, permission)) {
+		if (player.hasPermission(permission)) {
 			return true;
 		}
 		// sendMessage(player, F("stNoPermission", permission));

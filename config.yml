@@ -8,3 +8,4 @@ distance:
   radius: 5
   frequency: 0.25
 debugMessages: false
+debugNoIntercept: false
