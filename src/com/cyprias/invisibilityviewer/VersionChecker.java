@@ -7,28 +7,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class VersionChecker {
-	private String curseRSS;
-	private JavaPlugin plugin;
-	//private Logger log = Logger.getLogger("Minecraft");
-
-	private String pluginName;
-
-	public VersionChecker(JavaPlugin plugin, String curseRSS) {
-		this.plugin = plugin;
-		this.curseRSS = curseRSS;
-		this.pluginName = plugin.getName();
-	}
-
-	public void retreiveVersionInfo(Object... args) {
-		getVersionInfoTask task = new getVersionInfoTask(this);
-		int taskID = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, 0L);
-		task.setId(taskID);
+	public static void retreiveVersionInfo(JavaPlugin plugin, String curseRSS, Object... args) {
+		getVersionInfoTask task = new getVersionInfoTask(plugin.getServer().getPluginManager(), plugin.getDescription().getName(), curseRSS);
+		BukkitTask taskID = plugin.getServer().getScheduler().runTaskAsynchronously(plugin, task);
 		task.setArgs(args);
 	}
 
@@ -50,7 +39,7 @@ public class VersionChecker {
 		return 0;
 	}
 	
-	List<versionInfo> versions = new ArrayList<versionInfo>();
+	
 
 	public static class versionInfo {
 		private String title;
@@ -83,28 +72,24 @@ public class VersionChecker {
 		}
 	}
 
-	private class getVersionInfoTask implements Runnable {
-		private VersionChecker me;
+	private static class getVersionInfoTask implements Runnable {
 		private Object[] args;
-
-
-		public getVersionInfoTask(VersionChecker me2) {
-			this.me = me2;
+		private String pluginName, curseRSS;
+		private PluginManager pm;
+		public getVersionInfoTask(PluginManager pm, String pluginName, String curseRSS) {
+			this.pm = pm;
+			this.pluginName = pluginName;
+			this.curseRSS = curseRSS;
 		}
 		public void setArgs(Object... args) {
 			this.args = args;
 		}
 
-		
-		private int taskID;
-		public void setId(int n) {
-			this.taskID = n;
-		}
 
 		@Override
 		public void run() {
 			try {
-				URL url = new URL(me.curseRSS);
+				URL url = new URL(this.curseRSS);
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openConnection().getInputStream());
 				doc.getDocumentElement().normalize();
 				NodeList nodes = doc.getElementsByTagName("item");
@@ -113,7 +98,8 @@ public class VersionChecker {
 				NodeList subNodes;
 
 				//log.info(ChatColor.WHITE + "getVersionInfoTask run B getLenth: " + nodes.getLength());
-
+				List<versionInfo> versions = new ArrayList<versionInfo>();
+				
 				if (nodes.getLength() > 0) {
 					versions.clear();
 
@@ -138,8 +124,8 @@ public class VersionChecker {
 						description = subElement.getChildNodes().item(0).getNodeValue();
 						versions.add(new versionInfo(title, link, pubDate, description));
 					}
-					VersionCheckerEvent event = new VersionCheckerEvent(me.plugin.getName(), versions, this.args);
-					me.plugin.getServer().getPluginManager().callEvent(event);
+					VersionCheckerEvent event = new VersionCheckerEvent(this.pluginName, versions, this.args);
+					this.pm.callEvent(event);
 				}
 
 			} catch (Exception localException) {
@@ -186,3 +172,4 @@ public class VersionChecker {
 
 	
 }
+

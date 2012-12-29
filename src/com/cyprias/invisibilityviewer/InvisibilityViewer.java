@@ -18,8 +18,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_4_6.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 
@@ -31,15 +29,12 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.injector.PacketFilterManager;
-import com.comphenix.protocol.reflect.FieldAccessException;
 import com.comphenix.protocol.reflect.StructureModifier;
 
 public class InvisibilityViewer extends JavaPlugin {
 	public static String chatPrefix = "§f[§aIV§f] ";
 
 	private ProtocolManager protocolManager;
-	private String stPluginEnabled = "§f%s §7v§f%s §7is enabled.";
 	String pluginName;
 
 	public Events events;
@@ -57,7 +52,8 @@ public class InvisibilityViewer extends JavaPlugin {
 		new Config(this);
 		this.events = new Events(this);
 		this.commands = new Commands(this);
-		this.versionChecker = new VersionChecker(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
+
+
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
@@ -70,11 +66,13 @@ public class InvisibilityViewer extends JavaPlugin {
 	public void onEnable() {
 		Config.reloadOurConfig(this);
 
+		if (Config.checkNewVersionOnStartup == true)
+			VersionChecker.retreiveVersionInfo(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
+		
 		getServer().getPluginManager().registerEvents(this.events, this);
 		getCommand("iv").setExecutor(this.commands);
 
-		if (Config.checkNewVersionOnStartup == true)
-			this.versionChecker.retreiveVersionInfo();
+
 
 		addPacketListener();
 		fillViewInvis();
@@ -156,7 +154,6 @@ public class InvisibilityViewer extends JavaPlugin {
 
 					StructureModifier<Object> mods = packet.getModifier();
 
-					WatchableObject changedData;
 					Entity entity = null;
 					if (mods.size() > 0) {
 						int eID = (Integer) mods.read(0);
@@ -169,6 +166,7 @@ public class InvisibilityViewer extends JavaPlugin {
 
 						for (int i = 1; i < mods.size(); i++) {//0=entID
 								if (mods.read(i) instanceof ArrayList) {
+									@SuppressWarnings("unchecked")
 									ArrayList<WatchableObject> list = (ArrayList<WatchableObject>) mods.read(i);
 
 									Byte entFlag;
@@ -292,7 +290,6 @@ public class InvisibilityViewer extends JavaPlugin {
 			int radius = getServer().getViewDistance() * 16;
 			List<Entity> ents = entity.getNearbyEntities(radius, radius, radius);
 
-			double dist;
 			for (Entity e : ents) {
 				if (e instanceof Player) {
 					// dist = e.getLocation().distance(entity.getLocation());
@@ -319,7 +316,7 @@ public class InvisibilityViewer extends JavaPlugin {
 		int radius = getServer().getViewDistance() * 16;
 		List<Entity> ents = player.getNearbyEntities(radius, radius, radius);
 		String pName = player.getName();
-		Integer pFlags = viewInvis.get(pName);
+		viewInvis.get(pName);
 
 		for (Entity e : ents) {
 

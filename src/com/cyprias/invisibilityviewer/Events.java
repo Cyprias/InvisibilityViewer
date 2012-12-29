@@ -20,7 +20,10 @@ public class Events implements Listener {
 		if (event.getPluginName() == plugin.getName()) {
 			VersionChecker.versionInfo info = event.getVersionInfo(0);
 			String curVersion = plugin.getDescription().getVersion();
-			int compare = plugin.versionChecker.compareVersions(curVersion, info.getTitle());
+			int compare = VersionChecker.compareVersions(curVersion, info.getTitle());
+			if (Config.debugMessages == true)
+				plugin.info("Latest version available is v" + info.getTitle());
+			
 			if (compare < 0) {
 				plugin.info("We're running v" + curVersion + ", v" + info.getTitle() + " is available");
 				plugin.info(info.getLink());
