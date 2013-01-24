@@ -9,7 +9,7 @@ public class Config {
 	private static Configuration config;
 	
 
-	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, colouredConsoleMessages, distanceEnabled, debugMessages, debugNoIntercept;
+	static Boolean checkNewVersionOnStartup, togglePlayerByDefault, toggleOtherByDefault, distanceEnabled, debugMessages, debugNoIntercept;
 	static int distanceRadius;
 	static long distanceFrequency;
 	
@@ -28,7 +28,6 @@ public class Config {
 		checkNewVersionOnStartup = config.getBoolean("checkNewVersionOnStartup");
 		togglePlayerByDefault = config.getBoolean("toggledByDefault.player");
 		toggleOtherByDefault = config.getBoolean("toggledByDefault.other");
-		colouredConsoleMessages = config.getBoolean("colouredConsoleMessages");
 		
 		distanceEnabled = config.getBoolean("distance.enabled");
 		distanceRadius = config.getInt("distance.radius");

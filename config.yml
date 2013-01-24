@@ -2,7 +2,6 @@ checkNewVersionOnStartup: true
 toggledByDefault:
   player: false
   other: false
-colouredConsoleMessages: true
 distance:
   enabled: true
   radius: 5

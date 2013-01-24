@@ -8,18 +8,20 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
-import net.minecraft.server.v1_4_6.MobEffectList;
-import net.minecraft.server.v1_4_6.WatchableObject;
+import javax.xml.parsers.ParserConfigurationException;
+
+import net.minecraft.server.v1_4_R1.MobEffectList;
+import net.minecraft.server.v1_4_R1.WatchableObject;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_4_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.xml.sax.SAXException;
 
 import com.comphenix.protocol.Packets;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -33,7 +35,8 @@ import com.comphenix.protocol.reflect.StructureModifier;
 
 public class InvisibilityViewer extends JavaPlugin {
 	public static String chatPrefix = "§f[§aIV§f] ";
-
+	static InvisibilityViewer instance;
+	
 	private ProtocolManager protocolManager;
 	String pluginName;
 
@@ -44,8 +47,8 @@ public class InvisibilityViewer extends JavaPlugin {
 
 	MobEffectList invisEffect;
 	
-	final Byte viewByte = 0; //Default byte.
-	final Byte hideByte = 32; //Byte telling entity is invisible.
+	final Byte defaultMask = 0x00;
+	final Byte invisibleMask = 0x20;
 	
 	public void onLoad() {
 		pluginName = getDescription().getName();
@@ -61,13 +64,16 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 
 		invisEffect = MobEffectList.INVISIBILITY;
-		log.info(String.format("%s v%s is loaded.", pluginName, this.getDescription().getVersion()));
+		Logger.info(String.format("%s v%s is loaded.", pluginName, this.getDescription().getVersion()));
 	}
+	
+	
 	public void onEnable() {
+		instance = this;
 		Config.reloadOurConfig(this);
 
 		if (Config.checkNewVersionOnStartup == true)
-			VersionChecker.retreiveVersionInfo(this, "http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
+			checkVersion();
 		
 		getServer().getPluginManager().registerEvents(this.events, this);
 		getCommand("iv").setExecutor(this.commands);
@@ -77,9 +83,14 @@ public class InvisibilityViewer extends JavaPlugin {
 		addPacketListener();
 		fillViewInvis();
 
-		log.info(String.format("%s v%s is enabled.", pluginName, this.getDescription().getVersion()));
+		Logger.info(String.format("%s v%s is enabled.", pluginName, this.getDescription().getVersion()));
 	}
 
+	public static final JavaPlugin getInstance() {
+		return instance;
+	}
+
+	
 	public void onDisable() {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 		protocolManager.removePacketListeners(this);
@@ -90,9 +101,34 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 		getServer().getScheduler().cancelTasks(this);
 		
-		log.info(String.format("%s v%s is disabled.", pluginName, this.getDescription().getVersion()));
+		Logger.info(String.format("%s v%s is disabled.", pluginName, this.getDescription().getVersion()));
 	}
 
+	private void checkVersion() {
+		getServer().getScheduler().runTaskAsynchronously(instance, new Runnable() {
+			public void run() {
+				try {
+					VersionChecker version = new VersionChecker("http://dev.bukkit.org/server-mods/invisibilityviewer/files.rss");
+					VersionChecker.versionInfo info = (version.versions.size() > 0) ? version.versions.get(0) : null;
+					if (info != null) {
+						String curVersion = getDescription().getVersion();
+						if (VersionChecker.compareVersions(curVersion, info.getTitle()) < 0) {
+							Logger.warning("We're running v" + curVersion + ", v" + info.getTitle() + " is available");
+							Logger.warning(info.getLink());
+						}
+					}
+				} catch (SAXException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (ParserConfigurationException e) {
+					e.printStackTrace();
+				}
+
+			}
+		});
+	}
+	
 	public static HashMap<String, Integer> viewInvis = new HashMap<String, Integer>();
 
 	private Entity getEntity(List<Entity> ents, int eID) {
@@ -179,46 +215,36 @@ public class InvisibilityViewer extends JavaPlugin {
 												continue;
 											
 											if (Config.debugMessages == true) 
-												info(player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")"));
+												Logger.info(player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")"));
 											
 
-	
+											
 											if (Config.debugNoIntercept == true)
 												continue;
 											
 											
-											if (entFlag == hideByte) {
+											if (entFlag == invisibleMask) {
 
 												if (Config.distanceEnabled == true && !distanceTaskIDs.containsKey(entity)) {
+													//Start a timer to check distance.
 													invisDistanceTask task = new invisDistanceTask(entity);
 													int taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, task, 0L, (Config.distanceFrequency * 20L));
 													task.setId(taskID);
 													distanceTaskIDs.put(entity, taskID);
 												}
 												
-												if (Config.distanceEnabled == true && distanceView(player, entity)) {
-													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), viewByte));
-													mods.write(i, list);
+												if ((Config.distanceEnabled == true && distanceView(player, entity)) || canView(player, entity) == true) {
+													
+													//Replace the hide byte with the view byte.
+													mods.write(i, list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), defaultMask)));
+													
 													if (Config.debugMessages == true) 
-														info("Switched " + player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")") + " to " + viewByte);
-													
-													
-												} else if (canView(player, entity) == true) {
-													list.set(a, new WatchableObject(list.get(a).c(), list.get(a).a(), viewByte));
-													mods.write(i, list);
-													if (Config.debugMessages == true) 
-														info("Switched " + player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")") + " to " + viewByte);
-													
+														Logger.info("Switched " + player.getName() + "'s receving flag " + entFlag + " on " + ((entity instanceof Player)  ? ((Player) entity).getName() : entity.getType() + "("+eID+")") + " to " + defaultMask);
 												}
 
-											} else if (distanceTaskIDs.containsKey(entity)) {
-
-												if (entFlag == viewByte) {
-													plugin.getServer().getScheduler().cancelTask(distanceTaskIDs.get(entity));
-													distanceTaskIDs.remove(entity);
-
-												}
-
+											} else if (entFlag == defaultMask && distanceTaskIDs.containsKey(entity)) {
+												plugin.getServer().getScheduler().cancelTask(distanceTaskIDs.get(entity));
+												distanceTaskIDs.remove(entity);
 											}
 										}
 
@@ -247,8 +273,11 @@ public class InvisibilityViewer extends JavaPlugin {
 		}
 		lastInvisSent.put(uid, flag);
 
+		//if (player.isOnline())
+		//	return;
+		
 		if (Config.debugMessages == true)
-			info("Sending flag "+flag+" on entity " + entID + " to " + player.getName());
+			Logger.info("Sending flag "+flag+" on entity " + entID + " to " + player.getName());
 		
 		PacketContainer invisPacket = protocolManager.createPacket(Packets.Server.ENTITY_METADATA);
 
@@ -301,13 +330,19 @@ public class InvisibilityViewer extends JavaPlugin {
 
 					if (Config.distanceEnabled == true && distanceView((Player) e, entity)) {
 						try {
-							sendFlagPacket((Player) e, entity.getEntityId(), viewByte);
-						} catch (InvocationTargetException e1) {e1.printStackTrace();}
+							sendFlagPacket((Player) e, entity.getEntityId(), defaultMask);
+						} catch (InvocationTargetException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 
 					} else if (canView((Player) e, entity) == false) {
-						try {
-							sendFlagPacket((Player) e, entity.getEntityId(), hideByte);
-						} catch (InvocationTargetException e1) {e1.printStackTrace();}
+							try {
+								sendFlagPacket((Player) e, entity.getEntityId(), invisibleMask);
+							} catch (InvocationTargetException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 					}
 
 				}
@@ -327,9 +362,9 @@ public class InvisibilityViewer extends JavaPlugin {
 
 			if (isInvisible(e)) {
 				if (canView(player, e) == true) {
-					sendFlagPacket(player, e.getEntityId(), viewByte);
+					sendFlagPacket(player, e.getEntityId(), defaultMask);
 				} else {
-					sendFlagPacket(player, e.getEntityId(), hideByte);
+					sendFlagPacket(player, e.getEntityId(), invisibleMask);
 				}
 			}
 
@@ -345,9 +380,8 @@ public class InvisibilityViewer extends JavaPlugin {
 					Iterator<PotionEffect> iterator = collection.iterator();
 					while (iterator.hasNext()) {
 						PotionEffect effect = (PotionEffect) iterator.next();
-						if (effect.getType().getId() == invisEffect.getId()) {
+						if (effect.getType().getId() == invisEffect.getId()) 
 							return true;
-						}
 					}
 				}
 			}
@@ -358,9 +392,8 @@ public class InvisibilityViewer extends JavaPlugin {
 	}
 
 	public void fillViewInvis() {
-		for (Player p : getServer().getOnlinePlayers()) {
+		for (Player p : getServer().getOnlinePlayers()) 
 			addPlayerInvisOps(p);
-		}
 	}
 
 	public void addPlayerInvisOps(Player player) {
@@ -376,20 +409,10 @@ public class InvisibilityViewer extends JavaPlugin {
 	}
 
 	public ChatColor colouredHasMask(int flags, int mask) {
-		if (hasMask(flags, mask)) {
+		if (hasMask(flags, mask))
 			return ChatColor.GREEN;
-		}
+		
 		return ChatColor.RED;
-	}
-
-	private Logger log = Logger.getLogger("Minecraft");
-
-	public void info(String msg) {
-		if (Config.colouredConsoleMessages == true) {
-			getServer().getConsoleSender().sendMessage(chatPrefix + msg);
-		} else {
-			log.info(ChatColor.stripColor(chatPrefix + msg));
-		}
 	}
 
 	public static int maskPlayer = (int) Math.pow(2, 0);
@@ -408,9 +431,9 @@ public class InvisibilityViewer extends JavaPlugin {
 	}
 
 	public void sendMessage(CommandSender sender, String message, Boolean showConsole, Boolean sendPrefix) {
-		if (sender instanceof Player && showConsole == true) {
-			info("§e" + sender.getName() + "->§f" + message);
-		}
+		if (sender instanceof Player && showConsole == true)
+			Logger.info(sender.getName() + "->" + message);
+		
 		if (sendPrefix == true) {
 			sender.sendMessage(chatPrefix + message);
 		} else {
